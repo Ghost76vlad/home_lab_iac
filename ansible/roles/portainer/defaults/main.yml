@@ -1,0 +1,11 @@
+---
+# defaults file for roles/portainer
+pkg_docker:
+  - docker.io
+  - docker-compose
+
+dir_portainer:
+  - /data/portainer
+  - /data/portainer/data
+  - /data/portainer/backups
+  - /data/portainer/certs

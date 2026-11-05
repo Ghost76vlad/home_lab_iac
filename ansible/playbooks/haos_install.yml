@@ -1,0 +1,12 @@
+- name: Install Home Assistant
+  hosts: all
+  become: true
+
+  roles:
+    - { role: dns, tags: dns }
+    - { role: install_lib, tags: lib }
+    - { role: pkg_tools, tags: pkg_tools }
+    - { role: data-disk, tags: data-disk }
+    - { role: chronyd, tags: chronyd }
+    #- { role: freeipa_client, tags: ipa }
+    #- { role: portainer, tags: portainer}

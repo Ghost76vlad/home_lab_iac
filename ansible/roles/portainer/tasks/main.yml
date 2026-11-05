@@ -1,0 +1,10 @@
+---
+- name: Install packages docker
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ pkg_docker }}"
+
+- name: Create directory for Portainer
+  ansible.builtin.file:
+    path: "{{ dir_portainer }}"

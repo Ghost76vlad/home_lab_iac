@@ -1,0 +1,36 @@
+---
+- name: Install systemd-resolved packages
+  ansible.builtin.package:
+    name:
+      - systemd-resolved
+    state: present
+  notify: dns_restart
+
+- name: Template a file to resolved.conf
+  ansible.builtin.template:
+    src: ubuntu_resolved.conf.j2
+    dest: /etc/systemd/resolved.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: ansible_facts['os_family'] == 'Debian'
+  notify: dns_restart
+
+- name: Получение списка сетевых подключений
+  ansible.builtin.command: nmcli -t -f NAME connection show # используется для получения списка сетевых подключений в NetworkManager
+  register: nmcli_connections
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Добавление DNS-сервера
+  community.general.nmcli:
+    conn_name: "{{ item }}"
+    dns4:
+      - "{{ dns_ipa }}"
+      - "{{ dns_mikrotik }}"
+    state: present
+  loop: "{{ nmcli_connections.stdout.splitlines() }}"
+  when: ansible_facts['os_family'] == 'RedHat'
+  notify: reload_nmcli
+
+- name: Принудительный запуск handlers
+  meta: flush_handlers

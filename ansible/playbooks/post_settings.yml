@@ -1,0 +1,9 @@
+---
+- name: Post Setting VM
+  hosts: all
+  become: true
+
+  roles:
+    - { role: install_lib, tags: lib }
+    - { role: dns, tags: dns }
+    - { role: chronyd, tags: chronyd }

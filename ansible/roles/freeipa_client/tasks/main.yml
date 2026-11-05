@@ -1,0 +1,117 @@
+---
+- name: Check client FreeIPA
+  command: "ipa --version"
+  register: ipa_client_status
+  ignore_errors: yes
+  changed_when: false
+
+- name: Add multiple entries with lineinfile RedHat
+  block:
+    - name: Add IPA server in file hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        line: "{{ dns_ipa }} {{ ipa_server }}.{{ ipa_domain }} {{ ipa_server }}"
+        state: present
+
+    - name: Add current host
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        line: "{{ ansible_default_ipv4.address }} {{ ansible_hostname }}.{{ ipa_domain }} {{ ansible_hostname }}"
+        state: present
+  tags: file_hosts
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Add multiple entries with lineinfile Debian/Ubuntu
+  block:
+    - name: Add current host in template cloud-init ipa-srv
+      ansible.builtin.lineinfile:
+        path: /etc/cloud/templates/hosts.debian.tmpl
+        line: "{{ dns_ipa }} {{ ipa_server }}.{{ ipa_domain }} {{ ipa_server }}"
+        state: present
+      when: ansible_facts['distribution'] == 'Ubuntu'
+
+    - name: Add current file host ipa-srv
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        line: "{{ dns_ipa }} {{ ipa_server }}.{{ ipa_domain }} {{ ipa_server }}"
+        state: present
+
+    - name: Add current file hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        line: "{{ ansible_default_ipv4.address }} {{ ansible_hostname }}.{{ ipa_domain }} {{ ansible_hostname }}"
+        state: present
+
+    - name: Add current host in template cloud-init
+      ansible.builtin.lineinfile:
+        path: /etc/cloud/templates/hosts.debian.tmpl
+        line: "{{ ansible_default_ipv4.address }} {{ ansible_hostname }}.{{ ipa_domain }} {{ ansible_hostname }}"
+        state: present
+      when: ansible_facts['distribution'] == 'Ubuntu'
+  tags: file_hosts
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Установка корректного FQDN
+  ansible.builtin.hostname:
+    name: ansible_facts["fact_name"]."{{ ipa_domain }}"
+
+- name: Настройка клиента FreeIPA
+  ansible.builtin.command: |
+    ipa-client-install \
+    --server={{ ipa_server }}.{{ ipa_domain }} \
+    --domain={{ ipa_domain }} \
+    --principal={{ ipa_admin_user }} \
+    --password={{ ipa_admin_password }} \
+    --mkhomedir \
+    --force-join \
+    --hostname=ansible_facts["fact_name"].{{ ipa_domain }} \
+    --ip-address={{ ansible_default_ipv4.address }} \
+    --unattended
+  args:
+    creates: "/etc/ipa/default.conf"
+  register: ipa_client_install
+  #no_log: true
+
+- name: Create DNS A-record for host
+  community.general.ipa_dnsrecord:
+    ipa_host: "{{ ipa_server }}.{{ ipa_domain }}"
+    ipa_user: "{{ ipa_admin_user }}"
+    ipa_pass: "{{ ipa_admin_password }}"
+    zone_name: "{{ ipa_domain }}"
+    record_name: ansible_facts["fact_name"]
+    record_type: "A"
+    record_value: "{{ ansible_default_ipv4.address }}"
+    state: present
+  when: ipa_client_install.rc == 0
+  register: dns_record_result
+  #ignore_errors: yes
+
+- name: Calculate reverse zone and PTR record name
+  set_fact:
+    # Преобразуем IP в формат для обратной зоны (например, 192.168.1.0/24 -> 1.168.192.in-addr.arpa)
+    reverse_zone: "{{ ansible_default_ipv4.address.split('.')[2] }}.{{ ansible_default_ipv4.address.split('.')[1] }}.{{ ansible_default_ipv4.address.split('.')[0] }}.in-addr.arpa"
+    # Имя PTR записи - последний октет IP (например, 192.168.1.10 -> 10)
+    ptr_record_name: "{{ ansible_default_ipv4.address.split('.')[3] }}"
+
+- name: Create DNS PTR-record for host
+  community.general.ipa_dnsrecord:
+    ipa_host: "{{ ipa_server }}.{{ ipa_domain }}"
+    ipa_user: "{{ ipa_admin_user }}"
+    ipa_pass: "{{ ipa_admin_password }}"
+    zone_name: "{{ reverse_zone }}"
+    record_name: "{{ ptr_record_name }}"
+    record_type: "PTR"
+    record_value: ansible_facts["fact_name"]."{{ ipa_domain }}."
+    state: present
+  when: ipa_client_install.rc == 0
+  register: dns_ptr_record_result
+
+- name: Проверка успешной установки клиента
+  debug:
+    msg: 'FreeIPA client установлен успешно для ansible_facts["fact_name"] с IP {{ ansible_default_ipv4.address }}'
+  when: ipa_client_install.rc == 0
+
+- name: Сообщение об ошибке установки
+  debug:
+    msg: 'Ошибка установки FreeIPA client для ansible_facts["fact_name"] с IP {{ ansible_default_ipv4.address }}'
+  when: ipa_client_install.rc != 0

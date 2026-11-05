@@ -1,0 +1,21 @@
+---
+pkg_install:
+  - python3
+  - python3-pip
+  - python3-hvac
+  - python3-venv
+  - gcc
+  - freeipa-client
+  - oddjob
+  - oddjob-mkhomedir
+  - sssd
+  - iputils-ping
+  - telnet
+  - ncat
+  - tree
+  - wget
+  - curl
+  - net-tools
+  - traceroute
+  - vim
+  - parted

@@ -1,0 +1,7 @@
+---
+# tasks file for roles/pkg_tools
+- name: Install packages tools
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ pkg_install }}"

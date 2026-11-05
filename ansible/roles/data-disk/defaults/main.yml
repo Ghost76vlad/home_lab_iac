@@ -1,0 +1,7 @@
+---
+data_disk_device: /dev/sdb
+data_mount_point: /data
+data_filesystem: xfs
+data_owner: ansible
+data_group: ansible
+data_mode: "0755"

@@ -1,0 +1,15 @@
+---
+# proxmox_ip: "{{ vault_proxmox.data.data.data.api_host }}"
+# proxmox_user: "{{ vault_proxmox.data.data.data.api_user }}"
+# proxmox_secret: "{{ vault_proxmox.data.data.data.api_token_proxmox }}"
+# proxmox_id: "{{ vault_proxmox.data.data.data.api_token_id }}"
+# proxmox_node: "{{ vault_proxmox.data.data.data.node }}"
+# sshkey_ansible: "{{ vault_proxmox.data.data.data.ssh_key_ansible }}"
+# vm_passwd: "{{ vault_proxmox.data.data.data.ansible_passwd }}"
+
+ipa_domain: itteam.local
+ipa_realm: ITTEAM.LOCAL
+ipa_server: ipasrv
+
+dns_ipa: 10.10.10.14
+dns_mikrotik: 10.10.10.1

@@ -1,0 +1,8 @@
+---
+# tasks file for roles/haos
+- name: Install packages for HAOS
+  ansible.builtin.package:
+    name:
+      - "docker.io"
+      - "docker-compose"
+    state: present
