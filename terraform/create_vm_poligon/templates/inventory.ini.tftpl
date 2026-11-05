@@ -1,0 +1,4 @@
+[all]
+%{ for name, ip in vm_ips ~}
+${name} ansible_host=${ip}
+%{ endfor ~}
