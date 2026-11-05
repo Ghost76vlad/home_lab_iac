@@ -1,0 +1,45 @@
+---
+- name: Get current mount facts
+  ansible.builtin.mount_facts:
+    devices: "{{ data_disk_device }}"
+  register: mount_info
+
+- name: Check if "{{ data_disk_device }}" is mounted to an unexpected path
+  ansible.builtin.fail:
+    msg: >-
+      "{{ data_disk_device }}" is already mounted at {{ item.mount_point }},
+      expected {{ data_mount_point }}.
+  loop: "{{ mount_info.ansible_facts.mount_points | dict2items }}"
+  when:
+    - mount_info.ansible_facts.mount_points | length > 0
+    - item.key != data_mount_point
+
+- name: Check if "{{ data_disk_device }}" has a filesystem
+  ansible.builtin.command:
+    cmd: blkid -o value -s TYPE {{ data_disk_device }}
+  register: sdb_fs_check
+  changed_when: false
+  failed_when: false
+
+- name: Format "{{ data_disk_device }}" with "{{ data_filesystem }}" if no filesystem present
+  community.general.filesystem:
+    fstype: "{{ data_filesystem }}"
+    dev: "{{ data_disk_device }}"
+    force: false
+  when: sdb_fs_check.stdout | length == 0
+
+- name: Mount "{{ data_disk_device }}" to "{{ data_mount_point }}" and add to fstab
+  ansible.posix.mount:
+    path: "{{ data_mount_point }}"
+    src: "{{ data_disk_device }}"
+    fstype: "{{ data_filesystem }}"
+    opts: defaults
+    state: mounted
+
+- name: Ensure "{{ data_mount_point }}" directory exists with correct ownership and permissions
+  ansible.builtin.file:
+    path: "{{ data_mount_point }}"
+    state: directory
+    owner: "{{ data_owner }}"
+    group: "{{ data_group }}"
+    mode: "{{ data_mode }}"

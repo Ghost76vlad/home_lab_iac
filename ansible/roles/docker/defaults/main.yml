@@ -1,0 +1,8 @@
+---
+pkg_docker:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-compose-plugin
+
+repo_docker_rhel: "https://download.docker.com/linux/rhel/docker-ce.repo"

@@ -1,0 +1,18 @@
+---
+# defaults file for roles/pkg_tools
+pkg_install:
+  - python3
+  - python3-pip
+  - python3-hvac
+  - python3-venv
+  - iputils-ping
+  - telnet
+  - ncat
+  - tree
+  - wget
+  - curl
+  - net-tools
+  - traceroute
+  - vim
+  - parted
+  - iperf3
