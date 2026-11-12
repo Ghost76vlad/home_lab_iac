@@ -1,3 +1,32 @@
-#SPDX-License-Identifier: MIT-0
 ---
-# tasks file for roles/docker
+- name: Install Docker on Debian/Ubuntu
+  ansible.builtin.include_tasks: debian.yml
+  when:
+      - ansible_facts['os_family'] == 'Debian'
+      - actions == "install"
+
+- name: Install Docker on Oracle Linux / RHEL family
+  ansible.builtin.include_tasks: rhel.yml
+  when:
+      - ansible_facts['os_family'] == "RedHat"
+      - actions == "install"
+
+- name: Ensure Docker service is started and enabled
+  ansible.builtin.systemd:
+      name: docker
+      state: started
+      enabled: true
+  when: actions == "install"
+
+- name: Add users to docker group
+  ansible.builtin.user:
+      name: "{{ item }}"
+      groups: docker
+      shell: /bin/bash
+      append: true
+  loop: "{{ docker_users }}"
+  when: actions == "install"
+
+- name: Uninstall  Docker
+  ansible.builtin.include_tasks: uninstall.yml
+  when: actions == "uninstall"

@@ -9,4 +9,5 @@
     - { role: data-disk, tags: data-disk }
     - { role: chronyd, tags: chronyd }
     #- { role: freeipa_client, tags: ipa }
+    - { role: docker, tags: docker }
     #- { role: portainer, tags: portainer}

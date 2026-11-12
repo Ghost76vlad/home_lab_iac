@@ -3,6 +3,12 @@ pkg_docker:
   - docker-ce
   - docker-ce-cli
   - containerd.io
+  - docker-buildx-plugin
   - docker-compose-plugin
 
 repo_docker_rhel: "https://download.docker.com/linux/rhel/docker-ce.repo"
+
+docker_users:
+  - "dockeradm"
+  - "ansible"
+actions: "install"

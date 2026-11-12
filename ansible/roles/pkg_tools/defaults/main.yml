@@ -16,3 +16,6 @@ pkg_install:
   - vim
   - parted
   - iperf3
+
+apt:
+  - python3-apt
